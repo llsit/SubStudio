@@ -1,12 +1,32 @@
 <!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Substudio · สตูดิโอคำบรรยาย</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#101214;color:#f1f3ed;font:16px/1.6 "Leelawadee UI",Tahoma,sans-serif}header,main{max-width:1190px;margin:auto;padding:20px 5%}header{display:flex;align-items:center;gap:11px;border-bottom:1px solid #333639;font:bold 22px Arial}header i{font:800 16px Arial;letter-spacing:-1px;background:#ceef72;color:#171914;border-radius:6px;padding:7px}h1{font-size:clamp(30px,4vw,49px);margin:24px 0 0;letter-spacing:-1.5px}p{color:#adb2ad;margin:4px 0 26px}.grid{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start}section{min-width:0;border:1px solid #393c3e;border-radius:16px;background:#1b1d1f;padding:22px}h2{font-size:19px;margin:0 0 17px}.screen{background:repeating-linear-gradient(135deg,#151719 0 14px,#17191b 14px 15px);aspect-ratio:16/9;display:grid;place-items:center;border:1px solid #35383a;border-radius:9px;overflow:hidden;position:relative}.screen span{text-align:center;color:#aeb3ac}.screen b{display:block;margin:0 auto 10px;width:max-content;border:2px solid #858d81;border-radius:7px;padding:0 9px;color:#d1d8ca;font:bold 25px/1.4 Arial}canvas{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;background:#000}.bar{display:flex;gap:12px;align-items:center;margin-top:14px}.bar input{width:0;flex:1;accent-color:#cbee75}.time{font:13px monospace;color:#c6cbc5}button,.download{font:inherit;background:#ccec79;color:#17200c;border:0;border-radius:8px;padding:11px 15px;font-weight:700;cursor:pointer}button:disabled{opacity:.42;cursor:default}.bar button{background:#323638;color:white;min-width:52px}.file{display:block;border:1px dashed #636958;background:#242825;padding:16px;border-radius:10px;cursor:pointer;position:relative;margin-bottom:12px}.file strong,.file small{display:block}.file small{color:#bcc3b6;overflow-wrap:anywhere}.file input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.file:focus-within{outline:2px solid #ceef72}#render,.download{width:100%;text-align:center;display:block;margin-top:16px}.download{text-decoration:none;background:#e6efd8}[hidden]{display:none!important}#status{font-size:14px;margin:12px 0 0;overflow-wrap:anywhere}.cues{margin-top:20px}.row{display:flex;gap:16px;padding:9px 0;border-top:1px solid #373a38;white-space:pre-line;text-align:left;width:100%;border-radius:0;background:none;color:#e4e7df;font-weight:400}.row time{font:13px/2 monospace;color:#ccec79}#rows{max-height:230px;overflow:auto}.note{font-size:14px;margin:12px 0 0}@media(max-width:780px){.grid{grid-template-columns:1fr}section{padding:17px}main{padding:12px 4%}}
-</style><header><i>CC</i> Substudio</header><main><h1>สตูดิโอคำบรรยาย</h1><p>เลือกวิดีโอและไฟล์ SRT เพื่อฝังซับตามเวลาที่กำหนด</p><div class="grid"><div><section><h2>ตัวอย่างวิดีโอ</h2><div class="screen"><span><b>CC</b>รอไฟล์วิดีโอ</span><canvas hidden></canvas></div><div class="bar"><button id="play" disabled aria-label="เล่นหรือหยุด">▶</button><input id="seek" aria-label="ตำแหน่งวิดีโอ" type="range" value="0" min="0" step=".05" disabled><span class="time" id="clock">0:00 / 0:00</span></div></section><section class="cues"><h2 id="listTitle">คำบรรยาย</h2><div id="rows"><small>รายการจะแสดงเมื่อเลือกไฟล์ SRT</small></div></section></div><section><h2>ไฟล์ต้นฉบับ</h2><label class="file"><strong>เลือกวิดีโอ</strong><small id="vn">MP4, WebM หรือวิดีโอที่เบราว์เซอร์รองรับ</small><input id="vf" type="file" accept="video/*"></label><label class="file"><strong>เลือกไฟล์คำบรรยาย</strong><small id="sn">SubRip (.srt)</small><input id="sf" type="file" accept=".srt"></label><button id="render" disabled>ส่งออกวิดีโอพร้อมซับ ↓</button><a id="save" class="download" hidden>ดาวน์โหลดวิดีโอ</a><p id="status" role="status"></p><p class="note">ประมวลผลไฟล์บนเครื่องของคุณ เปิดแท็บนี้ไว้ระหว่างส่งออก ใช้เวลาประมาณความยาววิดีโอ</p></section></div><video hidden playsinline preload="auto"></video></main><script>
+
+fieldset{border:0;padding:0;margin:22px 0 0;border-top:1px solid #393c3e;min-width:0}
+legend{padding:0 10px 0 0;font-weight:700;font-size:18px}
+.styleGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.styleGrid label{display:grid;gap:4px;font-size:14px;color:#cbd0c8}
+.styleGrid select,.styleGrid input[type=color]{color-scheme:dark;width:100%;height:36px;border:1px solid #535952;background:#272b28;color:white;border-radius:6px;padding:3px}
+.styleGrid input[type=range]{width:100%;accent-color:#ccec79}
+#sample{position:static;display:block;width:100%;height:auto;border-radius:6px;margin-top:10px;background:#394240}
+</style><header><i>CC</i> Substudio</header><main><h1>สตูดิโอคำบรรยาย</h1><p>เลือกวิดีโอและไฟล์ SRT เพื่อฝังซับตามเวลาที่กำหนด</p><div class="grid"><div><section><h2>ตัวอย่างวิดีโอ</h2><div class="screen"><span><b>CC</b>รอไฟล์วิดีโอ</span><canvas hidden></canvas></div><div class="bar"><button id="play" disabled aria-label="เล่นหรือหยุด">▶</button><input id="seek" aria-label="ตำแหน่งวิดีโอ" type="range" value="0" min="0" step=".05" disabled><span class="time" id="clock">0:00 / 0:00</span></div></section><section class="cues"><h2 id="listTitle">คำบรรยาย</h2><div id="rows"><small>รายการจะแสดงเมื่อเลือกไฟล์ SRT</small></div></section></div><section><h2>ไฟล์ต้นฉบับ</h2><label class="file"><strong>เลือกวิดีโอ</strong><small id="vn">MP4, WebM หรือวิดีโอที่เบราว์เซอร์รองรับ</small><input id="vf" type="file" accept="video/*"></label><label class="file"><strong>เลือกไฟล์คำบรรยาย</strong><small id="sn">SubRip (.srt)</small><input id="sf" type="file" accept=".srt"></label><fieldset id="styles">
+<legend>สไตล์คำบรรยาย</legend>
+<canvas id="sample" width="600" height="180" aria-label="ตัวอย่างสไตล์คำบรรยาย"></canvas>
+<div class="styleGrid">
+<label>ฟอนต์<select id="font"><option value="&quot;Leelawadee UI&quot;, Tahoma, sans-serif">Leelawadee UI</option><option value="Tahoma, sans-serif">Tahoma</option><option value="Thonburi, sans-serif">Thonburi</option><option value="serif">Serif</option><option value="monospace">Monospace</option></select></label>
+<label>น้ำหนัก<select id="weight"><option value="bold">หนา</option><option value="normal">ปกติ</option></select></label>
+<label>สีตัวอักษร<input type="color" id="ink" value="#ffffff"></label>
+<label>สีพื้นหลัง<input type="color" id="back" value="#000000"></label>
+<label><span>ขนาด <output id="sizeOut">100%</output></span><input type="range" id="size" min="60" max="180" step="5" value="100"></label>
+<label><span>ความทึบพื้นหลัง <output id="opacityOut">72%</output></span><input type="range" id="opacity" min="0" max="100" value="72"></label>
+<label>ตำแหน่ง<select id="position"><option value="bottom">ล่าง</option><option value="middle">กลาง</option><option value="top">บน</option></select></label>
+<label>เส้นขอบตัวอักษร<select id="outline"><option value="0">ปิด</option><option value="0.08">บาง</option><option value="0.15">หนา</option></select></label>
+</div></fieldset><button id="render" disabled>ส่งออกวิดีโอพร้อมซับ ↓</button><a id="save" class="download" hidden>ดาวน์โหลดวิดีโอ</a><p id="status" role="status"></p><p class="note">ประมวลผลไฟล์บนเครื่องของคุณ เปิดแท็บนี้ไว้ระหว่างส่งออก ใช้เวลาประมาณความยาววิดีโอ</p></section></div><video hidden playsinline preload="auto"></video></main><script>
 'use strict';
 const $=id=>document.getElementById(id),v=document.querySelector('video'),c=document.querySelector('canvas'),ctx=c.getContext('2d');
 let cues=[],ready=false,busy=false,sourceURL='',resultURL='',audioContext,audioSource,rec,frame=0,subVersion=0,aborted=false;
 function stamp(t){t=Math.floor(t||0);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
-function controls(){const finite=ready&&Number.isFinite(v.duration);$('play').disabled=$('seek').disabled=busy||!finite;$('render').disabled=busy||!finite||!cues.length;$('vf').disabled=$('sf').disabled=busy}
+function controls(){const finite=ready&&Number.isFinite(v.duration);$('play').disabled=$('seek').disabled=busy||!finite;$('render').disabled=busy||!finite||!cues.length;$('styles').disabled=$('vf').disabled=$('sf').disabled=busy}
 function clearResult(){if(resultURL)URL.revokeObjectURL(resultURL);resultURL='';$('save').hidden=true}
 function parseSrt(raw){return raw.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').trim().split(/\n[ \t]*\n+/).map(block=>{
 const lines=block.split('\n');if(/^\s*\d+\s*$/.test(lines[0]))lines.shift();
@@ -14,10 +34,75 @@ const m=(lines.shift()||'').match(/^\s*(\d+):(\d{2}):(\d{2})[,.](\d{1,3})\s*-->\
 if(!m||!lines.length)throw Error('รูปแบบ SRT ไม่ถูกต้อง กรุณาตรวจช่วงเวลาและข้อความ');const sec=i=>+m[i]*3600 + +m[i+1]*60 + +m[i+2] + Number('0.'+m[i+3]);const start=sec(1),end=sec(5);if(end<=start)throw Error('เวลาสิ้นสุดซับต้องมากกว่าเวลาเริ่ม');return {start,end,text:lines.join('\n').replace(/<\/?(?:b|i|u|font)(?:\s[^>]*)?>/gi,'')};
 }).sort((a,b)=>a.start-b.start)}
 function draw(){if(!ready||v.readyState<2)return;const w=c.width,h=c.height,t=v.currentTime;ctx.drawImage(v,0,0,w,h);
-const active=cues.filter(q=>q.start<=t&&t<q.end);if(active.length){const size=Math.max(10,Math.min(h*.053,w*.078));ctx.font='bold '+size+'px "Leelawadee UI", Tahoma, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const lines=[];
-for(const q of active)for(const s of q.text.split('\n')){let line='';for(const ch of Array.from(s)){if(line&&ctx.measureText(line+ch).width>w*.88){lines.push(line);line=''}line+=ch}lines.push(line)}
-lines.forEach((s,i)=>{let y=h*.91-(lines.length-1-i)*size*1.42;let width=ctx.measureText(s).width+size*.7;ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect((w-width)/2,y-size*.69,width,size*1.38);ctx.fillStyle='#fff';ctx.fillText(s,w/2,y)})}
+const active=cues.filter(q=>q.start<=t&&t<q.end);
+if(active.length) paintCaptions(ctx,w,h,active.map(q=>q.text),Math.max(10,Math.min(h*.053,w*.078)));
 $('seek').value=t;$('clock').textContent=stamp(t)+' / '+stamp(v.duration);if(busy)$('status').textContent='กำลังส่งออก '+Math.floor(t/v.duration*100)+'%'}
+const stylePanel=$('styles');
+const sample=$('sample');
+const graphemes=window.Intl?.Segmenter ? new Intl.Segmenter('th',{granularity:'grapheme'}) : null;
+let captionStyle;
+function paintCaptions(context,width,height,texts,baseSize){
+  const style=captionStyle;
+  const size=baseSize*style.scale;
+  const lineHeight=size*1.42;
+  context.save();
+  context.font=style.weight+' '+size+'px '+style.font;
+  context.textAlign='center';
+  context.textBaseline='middle';
+  const lines=[];
+  for(const text of texts){
+    for(const paragraph of text.split('\n')){
+      let line='';
+      const units=graphemes ? Array.from(graphemes.segment(paragraph),part=>part.segment) : Array.from(paragraph);
+      for(const unit of units){
+        if(line && context.measureText(line+unit).width>width*.88){
+          lines.push(line);
+          line='';
+        }
+        line+=unit;
+      }
+      lines.push(line);
+    }
+  }
+  const blockHeight=lines.length*lineHeight;
+  const margin=Math.min(height*.09,lineHeight);
+  let top=margin;
+  if(style.position==='middle') top=(height-blockHeight)/2;
+  if(style.position==='bottom') top=height-margin-blockHeight;
+  lines.forEach((line,index)=>{
+    const y=Math.max(0,top)+(index+.5)*lineHeight;
+    const boxWidth=context.measureText(line).width+size*.7;
+    context.globalAlpha=style.opacity;
+    context.fillStyle=style.background;
+    context.fillRect((width-boxWidth)/2,y-size*.69,boxWidth,size*1.38);
+    context.globalAlpha=1;
+    if(style.outline){
+      context.strokeStyle='#101010';
+      context.lineWidth=size*style.outline;
+      context.lineJoin='round';
+      context.strokeText(line,width/2,y);
+    }
+    context.fillStyle=style.ink;
+    context.fillText(line,width/2,y);
+  });
+  context.restore();
+}
+function updateStyle(){
+  captionStyle={
+    font:$('font').value,weight:$('weight').value,ink:$('ink').value,
+    background:$('back').value,opacity:Number($('opacity').value)/100,
+    scale:Number($('size').value)/100,position:$('position').value,outline:Number($('outline').value)
+  };
+  $('sizeOut').textContent=$('size').value+'%';
+  $('opacityOut').textContent=$('opacity').value+'%';
+  const preview=sample.getContext('2d');
+  preview.clearRect(0,0,sample.width,sample.height);
+  paintCaptions(preview,sample.width,sample.height,['ตัวอย่างคำบรรยาย'],27);
+  if(resultURL){clearResult();$('status').textContent='สไตล์เปลี่ยนแล้ว กรุณาส่งออกวิดีโออีกครั้ง'}
+  draw();
+}
+stylePanel.addEventListener('input',updateStyle);
+updateStyle();
 function loop(){draw();if(!v.paused&&!v.ended)frame=requestAnimationFrame(loop)}
 v.onplay=()=>{if(audioContext)audioContext.resume();$('play').textContent='Ⅱ';cancelAnimationFrame(frame);loop()};v.onpause=()=>{$('play').textContent='▶';draw()};v.onseeked=v.onloadeddata=draw;
 $('vf').onchange=()=>{const f=$('vf').files[0];if(!f)return;clearResult();ready=false;c.hidden=true;controls();v.pause();if(sourceURL)URL.revokeObjectURL(sourceURL);v.src=sourceURL=URL.createObjectURL(f);$('vn').textContent=f.name;$('status').textContent='กำลังอ่านวิดีโอ…'};
