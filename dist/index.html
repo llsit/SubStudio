@@ -14,6 +14,9 @@ legend{padding:0 10px 0 0;font-weight:700;font-size:18px}
 #scopeBar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0}
 #scopeBar button{background:#303533;color:#e2e9db;font-size:13px;padding:4px 9px}
 #scopeName{font-weight:600}
+.lineChoice{display:flex;align-items:center;gap:8px}
+.lineChoice input{width:20px;height:20px;accent-color:#ccec79}
+.applyMixed{font-size:12px;padding:3px 6px;background:#353b32;color:#dfedce}
 </style><header><i>CC</i> Substudio</header><main><h1>สตูดิโอคำบรรยาย</h1><p>เลือกวิดีโอและไฟล์ SRT เพื่อฝังซับตามเวลาที่กำหนด</p><div class="grid"><div><section><h2>ตัวอย่างวิดีโอ</h2><div class="screen"><span><b>CC</b>รอไฟล์วิดีโอ</span><canvas hidden></canvas></div><div class="bar"><button id="play" disabled aria-label="เล่นหรือหยุด">▶</button><input id="seek" aria-label="ตำแหน่งวิดีโอ" type="range" value="0" min="0" step=".05" disabled><span class="time" id="clock">0:00 / 0:00</span></div></section><section class="cues"><h2 id="listTitle">คำบรรยาย</h2><div id="rows"><small>รายการจะแสดงเมื่อเลือกไฟล์ SRT</small></div></section></div><section><h2>ไฟล์ต้นฉบับ</h2><label class="file"><strong>เลือกวิดีโอ</strong><small id="vn">MP4, WebM หรือวิดีโอที่เบราว์เซอร์รองรับ</small><input id="vf" type="file" accept="video/*"></label><label class="file"><strong>เลือกไฟล์คำบรรยาย</strong><small id="sn">SubRip (.srt)</small><input id="sf" type="file" accept=".srt"></label><fieldset id="styles">
 <legend>สไตล์คำบรรยาย</legend>
 <div id="scopeBar"><span id="scopeName" aria-live="polite">สไตล์รวมทั้งคลิป</span>
@@ -50,7 +53,21 @@ const sample=$('sample');
 const graphemes=window.Intl?.Segmenter ? new Intl.Segmenter('th',{granularity:'grapheme'}) : null;
 const styleInputs=Array.from(stylePanel.querySelectorAll('.styleGrid input,.styleGrid select'));
 const defaults=Object.fromEntries(styleInputs.map(input=>[input.id,input.value]));
-let selectedLine=null;
+const selectedLines=new Set();
+const applyMixed=new Map();
+for(const input of styleInputs){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='applyMixed';
+  button.textContent='ค่าต่างกัน · ใช้ค่านี้กับที่เลือก';
+  button.hidden=true;
+  button.onclick=event=>{event.preventDefault();applyValue(input)};
+  input.closest('label').after(button);
+  const field=document.createElement('div');
+  input.closest('label').before(field);
+  field.append(input.closest('label'),button);
+  applyMixed.set(input,button);
+}
 function effectiveStyle(line){
   return {...defaults,...line?.overrides};
 }
@@ -106,39 +123,58 @@ function paintCaptions(context,width,height,entries,baseSize){
   context.restore();
 }
 function refreshEditor(){
-  const style=effectiveStyle(selectedLine);
-  for(const input of styleInputs) input.value=style[input.id];
+  const lines=Array.from(selectedLines);
+  const first=lines[0];
+  const styles=lines.map(effectiveStyle);
+  const style=styles[0]||defaults;
+  for(const input of styleInputs){
+    input.value=style[input.id];
+    applyMixed.get(input).hidden=!styles.some(other=>other[input.id]!==style[input.id]);
+  }
   $('sizeOut').textContent=style.size+'%';
   $('opacityOut').textContent=style.opacity+'%';
-  $('scopeName').textContent=selectedLine?'บรรทัดที่ '+selectedLine.number:'สไตล์รวมทั้งคลิป';
-  $('globalStyle').hidden=!selectedLine;
-  $('resetLine').hidden=!selectedLine||!Object.keys(selectedLine.overrides).length;
+  const count=lines.length;
+  $('scopeName').textContent=count>1?'เลือก '+count+' บรรทัด':first?'บรรทัดที่ '+first.number:'สไตล์รวมทั้งคลิป';
+  $('globalStyle').hidden=!count;
+  $('resetLine').hidden=!lines.some(line=>Object.keys(line.overrides).length);
+  $('resetLine').textContent=count>1?'คืนค่าสไตล์รวมให้บรรทัดที่เลือก':'คืนค่าสไตล์รวมให้บรรทัดนี้';
   const preview=sample.getContext('2d');
   preview.clearRect(0,0,sample.width,sample.height);
-  paintCaptions(preview,sample.width,sample.height,[selectedLine||{text:'ตัวอย่างคำบรรยาย'}],27);
+  paintCaptions(preview,sample.width,sample.height,[first||{text:'ตัวอย่างคำบรรยาย'}],27);
   draw();
 }
 function selectLine(line){
-  selectedLine?.button.setAttribute('aria-pressed','false');
-  selectedLine=line;
-  line?.button.setAttribute('aria-pressed','true');
+  for(const previous of selectedLines) markLine(previous,false);
+  selectedLines.clear();
+  if(line) markLine(line,true);
   refreshEditor();
+}
+function markLine(line,selected){
+  if(selected) selectedLines.add(line);
+  else selectedLines.delete(line);
+  line.checkbox.checked=selected;
+  line.button.setAttribute('aria-pressed',String(selected));
 }
 function styleChanged(){
   if(resultURL){clearResult();$('status').textContent='สไตล์เปลี่ยนแล้ว กรุณาส่งออกวิดีโออีกครั้ง'}
   refreshEditor();
 }
-stylePanel.addEventListener('input',event=>{
-  const input=event.target;
-  if(busy||!styleInputs.includes(input))return;
-  const target=selectedLine ? selectedLine.overrides : defaults;
-  target[input.id]=input.value;
+function applyValue(input){
+  if(busy)return;
+  if(selectedLines.size){
+    for(const line of selectedLines) line.overrides[input.id]=input.value;
+  }else{
+    defaults[input.id]=input.value;
+  }
   styleChanged();
+}
+stylePanel.addEventListener('input',event=>{
+  if(styleInputs.includes(event.target)) applyValue(event.target);
 });
 $('globalStyle').onclick=()=>selectLine(null);
 $('resetLine').onclick=()=>{
-  if(!selectedLine||busy)return;
-  selectedLine.overrides={};
+  if(busy)return;
+  for(const line of selectedLines) line.overrides={};
   styleChanged();
 };
 function showLines(parsed){
@@ -157,7 +193,19 @@ function showLines(parsed){
       selectLine(line);
       if(ready){v.pause();v.currentTime=Math.min(line.start,v.duration)}
     };
-    $('rows').append(button);
+    const wrapper=document.createElement('div');
+    wrapper.className='lineChoice';
+    const checkbox=document.createElement('input');
+    checkbox.type='checkbox';
+    checkbox.setAttribute('aria-label','เลือกบรรทัดที่ '+line.number+' '+line.text);
+    line.checkbox=checkbox;
+    checkbox.onchange=()=>{
+      if(busy){checkbox.checked=selectedLines.has(line);return}
+      markLine(line,checkbox.checked);
+      refreshEditor();
+    };
+    wrapper.append(checkbox,button);
+    $('rows').append(wrapper);
   }
 }
 refreshEditor();
@@ -166,7 +214,7 @@ v.onplay=()=>{if(audioContext)audioContext.resume();$('play').textContent='Ⅱ';
 $('vf').onchange=()=>{const f=$('vf').files[0];if(!f)return;clearResult();ready=false;c.hidden=true;controls();v.pause();if(sourceURL)URL.revokeObjectURL(sourceURL);v.src=sourceURL=URL.createObjectURL(f);$('vn').textContent=f.name;$('status').textContent='กำลังอ่านวิดีโอ…'};
 v.onloadedmetadata=()=>{ready=true;c.width=v.videoWidth;c.height=v.videoHeight;c.hidden=false;$('seek').max=v.duration;$('status').textContent=Number.isFinite(v.duration)?'':'ไม่พบความยาววิดีโอ กรุณาเลือกไฟล์ใหม่';controls();draw()};
 v.onerror=()=>{ready=false;c.hidden=true;controls();if(busy){aborted=true;if(rec?.state==='recording')rec.stop()}$('status').textContent='อ่านวิดีโอไม่ได้ กรุณาลองไฟล์ MP4 หรือ WebM'};
-$('sf').onchange=async()=>{const f=$('sf').files[0];if(!f)return;const version=++subVersion;clearResult();cues=[];selectLine(null);controls();$('rows').replaceChildren();$('listTitle').textContent='คำบรรยาย';$('sn').textContent=f.name;try{const buf=await f.arrayBuffer();if(version!==subVersion)return;let raw;try{raw=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch{raw=new TextDecoder(buf.byteLength>=2&&new Uint8Array(buf)[0]===255?'utf-16le':'windows-874').decode(buf)}showLines(parseSrt(raw));$('status').textContent='เลือกบรรทัดจากรายการเพื่อแก้สไตล์เฉพาะบรรทัดได้'}catch(e){$('status').textContent=e.message}controls();draw()};
+$('sf').onchange=async()=>{const f=$('sf').files[0];if(!f)return;const version=++subVersion;clearResult();cues=[];selectLine(null);controls();$('rows').replaceChildren();$('listTitle').textContent='คำบรรยาย';$('sn').textContent=f.name;try{const buf=await f.arrayBuffer();if(version!==subVersion)return;let raw;try{raw=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch{raw=new TextDecoder(buf.byteLength>=2&&new Uint8Array(buf)[0]===255?'utf-16le':'windows-874').decode(buf)}showLines(parseSrt(raw));$('status').textContent='ติ๊กช่องหน้าบรรทัดเพื่อปรับสไตล์หลายบรรทัดพร้อมกัน'}catch(e){$('status').textContent=e.message}controls();draw()};
 $('seek').oninput=e=>v.currentTime=Number(e.target.value);$('play').onclick=()=>{if(v.paused)v.play().catch(()=>{$('status').textContent='เล่นวิดีโอไม่ได้'});else v.pause()};
 v.onended=()=>{if(busy&&rec?.state==='recording')rec.stop()};
 $('render').onclick=async()=>{if(busy)return;clearResult();if(!window.MediaRecorder||!c.captureStream){$('status').textContent='โปรดใช้ Chrome หรือ Edge บนคอมพิวเตอร์เพื่อส่งออก';return}
